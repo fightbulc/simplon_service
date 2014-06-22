@@ -18,10 +18,13 @@ class Service
      */
     public static function start(array $config)
     {
-        if (isset($config['rootPath']) === false)
-        {
-            throw new Exception('Config misses: "rootPath" => ""');
-        }
+        // set error handler
+        self::setErrorHandler();
+
+        // set exception handler
+        self::setExceptionHandler();
+
+        // --------------------------------------
 
         if (isset($config['services']) === false)
         {
@@ -35,12 +38,6 @@ class Service
 
         // set config
         self::setConfig($config);
-
-        // set error handler
-        self::setErrorHandler();
-
-        // set exception handler
-        self::setExceptionHandler();
 
         // observe routes
         echo JsonRpcServer::observe($config['services']);
