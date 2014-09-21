@@ -7,40 +7,26 @@ class Service
     /** @var  array */
     protected static $config;
 
-    /** @var  string */
-    protected static $rootPath;
-
     /**
-     * @param array $config
+     * @param array $configCommon
+     * @param array $configEnv
      *
      * @return bool
-     * @throws Exception
+     * @throws ErrorException
      */
-    public static function start(array $config)
+    public static function start(array $configCommon, array $configEnv = [])
     {
+        // set config
+        self::setConfig($configCommon, $configEnv);
+
         // set error handler
         self::setErrorHandler();
 
         // set exception handler
         self::setExceptionHandler();
 
-        // --------------------------------------
-
-        if (isset($config['services']) === false)
-        {
-            throw new Exception('Config misses: "services" => []');
-        }
-
-        // --------------------------------------
-
-        // set root path
-        self::$rootPath = rtrim($config['rootPath'], '/') . '/../src/App';
-
-        // set config
-        self::setConfig($config);
-
         // observe routes
-        echo JsonRpcServer::observe($config['services']);
+        echo JsonRpcServer::observe(self::getConfigByKeys(['services']));
 
         return true;
     }
@@ -54,13 +40,14 @@ class Service
     }
 
     /**
-     * @param array $config
+     * @param array $configCommon
+     * @param array $configEnv
      *
      * @return bool
      */
-    public static function setConfig(array $config)
+    public static function setConfig(array $configCommon, array $configEnv = [])
     {
-        self::$config = $config;
+        self::$config = array_merge($configCommon, $configEnv);
 
         return true;
     }
@@ -69,18 +56,18 @@ class Service
      * @param array $keys
      *
      * @return array|bool
-     * @throws Exception
+     * @throws ErrorException
      */
     public static function getConfigByKeys(array $keys)
     {
         $config = self::getConfig();
-        $keysString = join('-->', $keys);
+        $keysString = join(' => ', $keys);
 
         while ($key = array_shift($keys))
         {
             if (isset($config[$key]) === false)
             {
-                throw new Exception('Config entry for "' . $keysString . '" is missing.');
+                throw new ErrorException('Config entry for [' . $keysString . '] is missing.');
             }
 
             $config = $config[$key];
@@ -148,7 +135,12 @@ class Service
                     break;
             }
 
-            die(JsonRpcServer::respond($error, 'error'));
+            $errorResponse = (new ErrorResponse())
+                ->setHttpStatusResponseInternalError()
+                ->setMessage('Internal error occured')
+                ->setData($error);
+
+            echo JsonRpcServer::respond($errorResponse);
         });
 
         return true;
@@ -161,17 +153,28 @@ class Service
     {
         set_exception_handler(function (\Exception $e)
         {
+            // test for json message
+            $message = json_decode($e->getMessage(), true);
+
+            // has no json
+            if ($message === null)
+            {
+                $message = $e->getMessage();
+            }
+
             $error = [
-                'message' => $e->getMessage(),
+                'message' => $message,
                 'code'    => $e->getCode(),
-                'data'    => [
-                    'type' => 'EXCEPTION',
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                ]
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
             ];
 
-            die(JsonRpcServer::respond($error, 'error'));
+            $errorResponse = (new ErrorResponse())
+                ->setHttpStatusResponseInternalError()
+                ->setMessage('An exception occured')
+                ->setData($error);
+
+            echo JsonRpcServer::respond($errorResponse);
         });
 
         return true;

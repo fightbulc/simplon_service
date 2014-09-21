@@ -23,8 +23,7 @@ class JsonRpcServer
     protected static $params = [];
 
     /**
-     * @return bool
-     * @throws Exception
+     * @return bool|ErrorResponse
      */
     protected static function validateAndSetup()
     {
@@ -66,52 +65,74 @@ class JsonRpcServer
             }
         }
 
-        throw new Exception('Malformed request data', 100000);
+        // failed request
+        return (new ErrorResponse())
+            ->setHttpStatusRequestMalformed()
+            ->setMessage('Malformed request data')
+            ->setData(['requestData' => self::$request]);
     }
 
     /**
-     * @param array $response
-     * @param string $type
+     * @param array|string|ErrorResponse $response
      *
      * @return string
      */
-    public static function respond(array $response, $type = 'success')
+    public static function respond($response)
     {
-        $data = [
-            'jsonrpc' => '2.0',
-            'id'      => self::$id
-        ];
-
-        if ($type === 'success')
+        if (is_string($response) === true)
         {
-            $data['result'] = $response;
+            // in case we respond with text (e.g. cached content)
+            $jsonResponse = '{"jsonrpc":"2.0", "id":' . self::$id . ', "result":' . $response . '}';
         }
         else
         {
-            $data['error'] = $response;
+            $data = [
+                'jsonrpc' => '2.0',
+                'id'      => self::$id
+            ];
+
+            if ($response instanceof ErrorResponse)
+            {
+                // set http status
+                http_response_code($response->getHttpStatusCode());
+
+                // set error data
+                $data['error'] = $response->getResponse();
+            }
+            else
+            {
+                $data['result'] = $response;
+            }
+
+            $jsonResponse = json_encode($data);
         }
 
-        return json_encode($data);
+        return $jsonResponse;
     }
 
     /**
      * @param array $services
      *
      * @return string
-     * @throws Exception
+     * @throws ErrorException
      */
     public static function observe(array $services)
     {
         // validate and setup
-        self::validateAndSetup();
+        $response = self::validateAndSetup();
+
+        if($response !== true)
+        {
+            return self::respond($response);
+        }
 
         // --------------------------------------
 
         // test if service exists
-        if (isset($services[self::$request['method']]))
+        if (isset($services[self::$domainName . '.' . self::$serviceName]))
         {
             // set service
-            $service = $services[self::$request['method']];
+            $service = $services[self::$domainName . '.' . self::$serviceName];
 
             // run service callback
             $response = call_user_func_array([(new $service), self::$methodName], self::$params);
@@ -123,6 +144,11 @@ class JsonRpcServer
         // --------------------------------------
 
         // failed request
-        throw new Exception('Invalid service request', 100001);
+        $errorResponse = (new ErrorResponse())
+            ->setHttpStatusRequestNotFound()
+            ->setMessage('Method not found')
+            ->setData(['requestData' => self::$request]);
+
+        return self::respond($errorResponse);
     }
 } 
