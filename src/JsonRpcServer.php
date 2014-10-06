@@ -19,7 +19,7 @@ class JsonRpcServer
     /** @var  string */
     protected static $methodName;
 
-    /** @var  [] */
+    /** @var  array */
     protected static $params = [];
 
     /**
