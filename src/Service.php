@@ -22,6 +22,9 @@ class Service
         // set error handler
         self::setErrorHandler();
 
+        // catch fatal errors
+        self::setFatalErrorHandler();
+
         // set exception handler
         self::setExceptionHandler();
 
@@ -140,7 +143,46 @@ class Service
                 ->setMessage('Internal error occured')
                 ->setData($error);
 
-            echo JsonRpcServer::respond($errorResponse);
+            return JsonRpcServer::respond($errorResponse);
+        });
+
+        return true;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function setFatalErrorHandler()
+    {
+        ini_set('display_errors', 0);
+
+        register_shutdown_function(function ()
+        {
+            $lastError = error_get_last();
+
+            if ($lastError !== null)
+            {
+                $errno = $lastError['type'];
+                $errstr = $lastError['message'];
+                $errfile = $lastError['file'];
+                $errline = $lastError['line'];
+
+                $error = [
+                    'message' => $errstr,
+                    'code'    => $errno,
+                    'data'    => [
+                        'file' => $errfile,
+                        'line' => $errline,
+                    ],
+                ];
+
+                $errorResponse = (new ErrorResponse())
+                    ->setHttpStatusResponseInternalError()
+                    ->setMessage('Fatal Error')
+                    ->setData($error);
+
+                echo JsonRpcServer::respond($errorResponse);
+            }
         });
 
         return true;
