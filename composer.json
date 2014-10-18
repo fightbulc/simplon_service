@@ -18,7 +18,7 @@
     ],
     "require": {
         "php": ">=5.3",
-        "simplon/error": "dev-develop"
+        "simplon/error": "0.1.*"
     },
     "autoload": {
         "psr-4": {
