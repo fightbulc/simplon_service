@@ -3,7 +3,11 @@
     "description": "Bootstrap Service Library",
     "homepage": "https://github.com/fightbulc/simplon_service",
     "type": "library",
-    "keywords": ["backend", "service", "jsonrpc"],
+    "keywords": [
+        "backend",
+        "service",
+        "jsonrpc"
+    ],
     "license": "MIT",
     "authors": [
         {
@@ -12,11 +16,10 @@
             "role": "developer"
         }
     ],
-
     "require": {
-        "php": ">=5.3"
+        "php": ">=5.3",
+        "simplon/error": "dev-develop"
     },
-
     "autoload": {
         "psr-4": {
             "Simplon\\Service\\": "src/"
