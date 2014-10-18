@@ -2,34 +2,36 @@
 
 namespace Simplon\Service;
 
+use Simplon\Error\ErrorHandler;
+use Simplon\Error\ErrorResponse;
+
 class Service
 {
-    /** @var  array */
-    protected static $config;
+    /**
+     * @var array
+     */
+    private static $config;
 
     /**
+     * @param array $services
      * @param array $configCommon
      * @param array $configEnv
      *
      * @return bool
      * @throws ErrorException
      */
-    public static function start(array $configCommon, array $configEnv = [])
+    public static function start(array $services, array $configCommon, array $configEnv = [])
     {
+        // handle errors
+        self::handleScriptErrors();
+        self::handleFatalErrors();
+        self::handleExceptions();
+
         // set config
         self::setConfig($configCommon, $configEnv);
 
-        // set error handler
-        self::setErrorHandler();
-
-        // catch fatal errors
-        self::setFatalErrorHandler();
-
-        // set exception handler
-        self::setExceptionHandler();
-
         // observe routes
-        echo JsonRpcServer::observe(self::getConfigByKeys(['services']));
+        echo JsonRpcServer::observe($services);
 
         return true;
     }
@@ -40,19 +42,6 @@ class Service
     public static function getConfig()
     {
         return (array)self::$config;
-    }
-
-    /**
-     * @param array $configCommon
-     * @param array $configEnv
-     *
-     * @return bool
-     */
-    public static function setConfig(array $configCommon, array $configEnv = [])
-    {
-        self::$config = array_merge($configCommon, $configEnv);
-
-        return true;
     }
 
     /**
@@ -85,66 +74,14 @@ class Service
     }
 
     /**
+     * @param array $configCommon
+     * @param array $configEnv
+     *
      * @return bool
      */
-    public static function setErrorHandler()
+    private static function setConfig(array $configCommon, array $configEnv = [])
     {
-        set_error_handler(function ($errno, $errstr, $errfile, $errline)
-        {
-            switch ($errno)
-            {
-                case E_USER_ERROR:
-                    $error = [
-                        'message' => $errstr,
-                        'code'    => null,
-                        'data'    => [
-                            'type' => 'ERROR',
-                            'file' => $errfile,
-                            'line' => $errline,
-                        ],
-                    ];
-                    break;
-
-                case E_USER_WARNING:
-                    $error = [
-                        'message' => "WARNING: $errstr",
-                        'code'    => $errno,
-                        'data'    => [
-                            'type' => 'WARNING'
-                        ],
-                    ];
-                    break;
-
-                case E_USER_NOTICE:
-                    $error = [
-                        'message' => $errstr,
-                        'code'    => $errno,
-                        'data'    => [
-                            'type' => 'NOTICE',
-                        ],
-                    ];
-                    break;
-
-                default:
-                    $error = [
-                        'message' => $errstr,
-                        'code'    => null,
-                        'data'    => [
-                            'type' => 'UNKNOWN',
-                            'file' => $errfile,
-                            'line' => $errline,
-                        ],
-                    ];
-                    break;
-            }
-
-            $errorResponse = (new ErrorResponse())
-                ->setHttpStatusResponseInternalError()
-                ->setMessage('Internal error occured')
-                ->setData($error);
-
-            return JsonRpcServer::respond($errorResponse);
-        });
+        self::$config = array_merge($configCommon, $configEnv);
 
         return true;
     }
@@ -152,73 +89,30 @@ class Service
     /**
      * @return bool
      */
-    public static function setFatalErrorHandler()
+    private static function handleScriptErrors()
     {
-        ini_set('display_errors', 0);
-
-        register_shutdown_function(function ()
-        {
-            $lastError = error_get_last();
-
-            if ($lastError !== null)
-            {
-                $errno = $lastError['type'];
-                $errstr = $lastError['message'];
-                $errfile = $lastError['file'];
-                $errline = $lastError['line'];
-
-                $error = [
-                    'message' => $errstr,
-                    'code'    => $errno,
-                    'data'    => [
-                        'file' => $errfile,
-                        'line' => $errline,
-                    ],
-                ];
-
-                $errorResponse = (new ErrorResponse())
-                    ->setHttpStatusResponseInternalError()
-                    ->setMessage('Fatal Error')
-                    ->setData($error);
-
-                echo JsonRpcServer::respond($errorResponse);
-            }
-        });
-
-        return true;
+        return ErrorHandler::handleScriptErrors(
+            function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
+        );
     }
 
     /**
      * @return bool
      */
-    public static function setExceptionHandler()
+    private static function handleFatalErrors()
     {
-        set_exception_handler(function (\Exception $e)
-        {
-            // test for json message
-            $message = json_decode($e->getMessage(), true);
+        return ErrorHandler::handleFatalErrors(
+            function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
+        );
+    }
 
-            // has no json
-            if ($message === null)
-            {
-                $message = $e->getMessage();
-            }
-
-            $error = [
-                'message' => $message,
-                'code'    => $e->getCode(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-            ];
-
-            $errorResponse = (new ErrorResponse())
-                ->setHttpStatusResponseInternalError()
-                ->setMessage('An exception occured')
-                ->setData($error);
-
-            echo JsonRpcServer::respond($errorResponse);
-        });
-
-        return true;
+    /**
+     * @return bool
+     */
+    private static function handleExceptions()
+    {
+        return ErrorHandler::handleExceptions(
+            function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
+        );
     }
 } 

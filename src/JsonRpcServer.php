@@ -2,30 +2,143 @@
 
 namespace Simplon\Service;
 
+use Simplon\Error\ErrorMessage;
+use Simplon\Error\ErrorResponse;
+
 class JsonRpcServer
 {
-    /** @var  [] */
-    protected static $request;
+    /**
+     * @var array
+     */
+    private static $request;
 
-    /** @var  string */
-    protected static $id;
+    /**
+     * @var string
+     */
+    private static $jsonRpcVersion = '2.0';
 
-    /** @var  string */
-    protected static $domainName;
+    /**
+     * @var string
+     */
+    private static $id;
 
-    /** @var  string */
-    protected static $serviceName;
+    /**
+     * @var string
+     */
+    private static $domainName;
 
-    /** @var  string */
-    protected static $methodName;
+    /**
+     * @var string
+     */
+    private static $serviceName;
 
-    /** @var  array */
-    protected static $params = [];
+    /**
+     * @var string
+     */
+    private static $methodName;
+
+    /**
+     * @var array
+     */
+    private static $params = [];
+
+    /**
+     * @param array|string|ErrorResponse $response
+     *
+     * @return string
+     */
+    public static function respond($response)
+    {
+        // in case we respond with text (e.g. cached content)
+        if (is_string($response) === true)
+        {
+            return '{"jsonrpc":"' . self::$jsonRpcVersion . '", "id":"' . self::$id . '", "result":' . $response . '}';
+        }
+
+        // --------------------------------------
+
+        $data = [
+            'jsonrpc' => '2.0',
+            'id'      => self::$id
+        ];
+
+        if ($response instanceof ErrorResponse)
+        {
+            // set http status
+            http_response_code($response->getHttpCode());
+
+            // set error data
+            $data['error'] = [
+                'message' => $response->getMessage(),
+            ];
+
+            // set data
+            if ($response->hasData() === true)
+            {
+                $data['error']['data'] = $response->getData();
+            }
+
+            // set code
+            if ($response->getCode() !== null)
+            {
+                $data['code'] = $response->getCode();
+            }
+        }
+        else
+        {
+            $data['result'] = $response;
+        }
+
+        return json_encode($data);
+    }
+
+    /**
+     * @param array $services
+     *
+     * @return string
+     * @throws ErrorException
+     */
+    public static function observe(array $services)
+    {
+        // validate and setup
+        $response = self::validateAndSetup();
+
+        if ($response !== true)
+        {
+            return self::respond($response);
+        }
+
+        // --------------------------------------
+
+        // test if service exists
+        if (isset($services[self::$domainName . '.' . self::$serviceName]))
+        {
+            // set service
+            $service = $services[self::$domainName . '.' . self::$serviceName];
+
+            // run service callback
+            $response = call_user_func_array([(new $service), self::$methodName], self::$params);
+
+            // return response
+            return self::respond($response);
+        }
+
+        // --------------------------------------
+
+        // failed request
+        $errorMessage = new ErrorMessage(
+            'Method not found',
+            'JSONRPC_E0001',
+            ['requestData' => self::$request]
+        );
+
+        return self::respond((new ErrorResponse())->requestNotFound($errorMessage));
+    }
 
     /**
      * @return bool|ErrorResponse
      */
-    protected static function validateAndSetup()
+    private static function validateAndSetup()
     {
         // make sure specifications are cool
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_SERVER['CONTENT_TYPE'] === 'application/json')
@@ -49,7 +162,7 @@ class JsonRpcServer
                     self::$request = $request;
 
                     // set id
-                    self::$id = $request['id'];
+                    self::$id = (string)$request['id'];
 
                     // set service parts
                     list(self::$domainName, self::$serviceName, self::$methodName) = explode('.', $request['method']);
@@ -65,90 +178,15 @@ class JsonRpcServer
             }
         }
 
-        // failed request
-        return (new ErrorResponse())
-            ->setHttpStatusRequestMalformed()
-            ->setMessage('Malformed request data')
-            ->setData(['requestData' => self::$request]);
-    }
-
-    /**
-     * @param array|string|ErrorResponse $response
-     *
-     * @return string
-     */
-    public static function respond($response)
-    {
-        if (is_string($response) === true)
-        {
-            // in case we respond with text (e.g. cached content)
-            $jsonResponse = '{"jsonrpc":"2.0", "id":' . self::$id . ', "result":' . $response . '}';
-        }
-        else
-        {
-            $data = [
-                'jsonrpc' => '2.0',
-                'id'      => self::$id
-            ];
-
-            if ($response instanceof ErrorResponse)
-            {
-                // set http status
-                http_response_code($response->getHttpStatusCode());
-
-                // set error data
-                $data['error'] = $response->getResponse();
-            }
-            else
-            {
-                $data['result'] = $response;
-            }
-
-            $jsonResponse = json_encode($data);
-        }
-
-        return $jsonResponse;
-    }
-
-    /**
-     * @param array $services
-     *
-     * @return string
-     * @throws ErrorException
-     */
-    public static function observe(array $services)
-    {
-        // validate and setup
-        $response = self::validateAndSetup();
-
-        if($response !== true)
-        {
-            return self::respond($response);
-        }
-
-        // --------------------------------------
-
-        // test if service exists
-        if (isset($services[self::$domainName . '.' . self::$serviceName]))
-        {
-            // set service
-            $service = $services[self::$domainName . '.' . self::$serviceName];
-
-            // run service callback
-            $response = call_user_func_array([(new $service), self::$methodName], self::$params);
-
-            // return response
-            return self::respond($response);
-        }
-
         // --------------------------------------
 
         // failed request
-        $errorResponse = (new ErrorResponse())
-            ->setHttpStatusRequestNotFound()
-            ->setMessage('Method not found')
-            ->setData(['requestData' => self::$request]);
+        $errorMessage = new ErrorMessage(
+            'Malformed request data',
+            'JSONRPC_E0002',
+            ['requestData' => self::$request]
+        );
 
-        return self::respond($errorResponse);
+        return (new ErrorResponse())->requestMalformed($errorMessage);
     }
-} 
+}
