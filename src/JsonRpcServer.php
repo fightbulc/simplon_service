@@ -119,7 +119,10 @@ class JsonRpcServer
             $response = call_user_func_array([(new $service), self::$methodName], self::$params);
 
             // return response
-            return self::respond($response);
+            if ($response !== null)
+            {
+                return self::respond($response);
+            }
         }
 
         // --------------------------------------
