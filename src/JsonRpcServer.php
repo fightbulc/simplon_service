@@ -2,7 +2,6 @@
 
 namespace Simplon\Service;
 
-use Simplon\Error\ErrorMessage;
 use Simplon\Error\ErrorResponse;
 
 class JsonRpcServer
@@ -126,13 +125,13 @@ class JsonRpcServer
         // --------------------------------------
 
         // failed request
-        $errorMessage = new ErrorMessage(
+        $errorResponse = (new ErrorResponse())->requestNotFound(
             'Method not found',
             'JSONRPC_E0001',
             ['requestData' => self::$request]
         );
 
-        return self::respond((new ErrorResponse())->requestNotFound($errorMessage));
+        return self::respond($errorResponse);
     }
 
     /**
@@ -181,12 +180,12 @@ class JsonRpcServer
         // --------------------------------------
 
         // failed request
-        $errorMessage = new ErrorMessage(
+        $errorResponse = (new ErrorResponse())->requestNotFound(
             'Malformed request data',
             'JSONRPC_E0002',
             ['requestData' => self::$request]
         );
 
-        return (new ErrorResponse())->requestMalformed($errorMessage);
+        return $errorResponse;
     }
 }
