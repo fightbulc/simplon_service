@@ -16,11 +16,11 @@ class Service
      * @param array $services
      * @param array $configCommon
      * @param array $configEnv
+     * @param null $errorHeaderCallback
      *
-     * @return bool
-     * @throws ErrorException
+     * @return string
      */
-    public static function start(array $services, array $configCommon, array $configEnv = [])
+    public static function start(array $services, array $configCommon, array $configEnv = [], $errorHeaderCallback = null)
     {
         // handle errors
         self::handleScriptErrors();
@@ -31,9 +31,7 @@ class Service
         self::setConfig($configCommon, $configEnv);
 
         // observe routes
-        echo JsonRpcServer::observe($services);
-
-        return true;
+        return JsonRpcServer::observe($services, $errorHeaderCallback);
     }
 
     /**

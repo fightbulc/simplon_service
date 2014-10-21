@@ -42,63 +42,27 @@ class JsonRpcServer
     private static $params = [];
 
     /**
-     * @param array|string|ErrorResponse $response
-     *
-     * @return string
+     * @var \Closure
      */
-    public static function respond($response)
-    {
-        // in case we respond with text (e.g. cached content)
-        if (is_string($response) === true)
-        {
-            return '{"jsonrpc":"' . self::$jsonRpcVersion . '", "id":"' . self::$id . '", "result":' . $response . '}';
-        }
-
-        // --------------------------------------
-
-        $data = [
-            'jsonrpc' => '2.0',
-            'id'      => self::$id
-        ];
-
-        if ($response instanceof ErrorResponse)
-        {
-            // set http status
-            http_response_code($response->getHttpCode());
-
-            // set error data
-            $data['error'] = [
-                'message' => $response->getMessage(),
-            ];
-
-            // set data
-            if ($response->hasData() === true)
-            {
-                $data['error']['data'] = $response->getData();
-            }
-
-            // set code
-            if ($response->getCode() !== null)
-            {
-                $data['code'] = $response->getCode();
-            }
-        }
-        else
-        {
-            $data['result'] = $response;
-        }
-
-        return json_encode($data);
-    }
+    private static $errorHeaderCallback;
 
     /**
      * @param array $services
+     * @param null $errorHeaderCallback
      *
      * @return string
-     * @throws ErrorException
      */
-    public static function observe(array $services)
+    public static function observe(array $services, $errorHeaderCallback = null)
     {
+        /**
+         * fix to overcome nginx's inability to deliver defined headers when the
+         * status code is anything other than: 200, 204, 301, 302 or 304
+         */
+        if ($errorHeaderCallback instanceof \Closure)
+        {
+            self::$errorHeaderCallback = $errorHeaderCallback;
+        }
+
         // validate and setup
         $response = self::validateAndSetup();
 
@@ -135,6 +99,62 @@ class JsonRpcServer
         );
 
         return self::respond($errorResponse);
+    }
+
+    /**
+     * @param $response
+     *
+     * @return string
+     */
+    public static function respond($response)
+    {
+        // in case we respond with text (e.g. cached content)
+        if (is_string($response) === true)
+        {
+            return '{"jsonrpc":"' . self::$jsonRpcVersion . '", "id":"' . self::$id . '", "result":' . $response . '}';
+        }
+
+        // --------------------------------------
+
+        $data = [
+            'jsonrpc' => self::$jsonRpcVersion,
+            'id'      => self::$id
+        ];
+
+        if ($response instanceof ErrorResponse)
+        {
+            if (self::$errorHeaderCallback instanceof \Closure)
+            {
+                $callback = self::$errorHeaderCallback;
+                $callback();
+            }
+
+            // set http status
+            http_response_code($response->getHttpCode());
+
+            // set error data
+            $data['error'] = [
+                'message' => $response->getMessage(),
+            ];
+
+            // set code
+            if ($response->getCode() !== null)
+            {
+                $data['error']['code'] = $response->getCode();
+            }
+
+            // set data
+            if ($response->hasData() === true)
+            {
+                $data['error']['data'] = $response->getData();
+            }
+        }
+        else
+        {
+            $data['result'] = $response;
+        }
+
+        return json_encode($data);
     }
 
     /**
