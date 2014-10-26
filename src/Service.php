@@ -85,31 +85,31 @@ class Service
     }
 
     /**
-     * @return bool
+     * @return void
      */
     private static function handleScriptErrors()
     {
-        return ErrorHandler::handleScriptErrors(
+        ErrorHandler::handleScriptErrors(
             function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
         );
     }
 
     /**
-     * @return bool
+     * @return void
      */
     private static function handleFatalErrors()
     {
-        return ErrorHandler::handleFatalErrors(
+        ErrorHandler::handleFatalErrors(
             function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
         );
     }
 
     /**
-     * @return bool
+     * @return void
      */
     private static function handleExceptions()
     {
-        return ErrorHandler::handleExceptions(
+        ErrorHandler::handleExceptions(
             function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
         );
     }
