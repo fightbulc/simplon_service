@@ -4,6 +4,11 @@ namespace Simplon\Service;
 
 use Simplon\Error\ErrorResponse;
 
+/**
+ * JsonRpcServer
+ * @package Simplon\Service
+ * @author Tino Ehrich (tino@bigpun.me)
+ */
 class JsonRpcServer
 {
     /**

@@ -2,6 +2,11 @@
 
 namespace Simplon\Service;
 
-class ErrorException extends \Exception
+/**
+ * ErrorException
+ * @package Simplon\Service
+ * @author Tino Ehrich (tino@bigpun.me)
+ */
+class ServiceException extends \Exception
 {
 }

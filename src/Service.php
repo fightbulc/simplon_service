@@ -4,14 +4,10 @@ namespace Simplon\Service;
 
 use Simplon\Error\ErrorHandler;
 use Simplon\Error\ErrorResponse;
+use Simplon\Helper\Config;
 
 class Service
 {
-    /**
-     * @var array
-     */
-    private static $config;
-
     /**
      * @param array $services
      * @param array $configCommon
@@ -39,36 +35,28 @@ class Service
      */
     public static function getConfig()
     {
-        return (array)self::$config;
+        return Config::getConfig();
     }
 
     /**
      * @param array $keys
      *
-     * @return array|bool
-     * @throws ErrorException
+     * @return bool
+     */
+    public static function hasConfigKeys(array $keys)
+    {
+        return Config::hasConfigKeys($keys);
+    }
+
+    /**
+     * @param array $keys
+     *
+     * @return array|null
+     * @throws \Simplon\Helper\HelperException
      */
     public static function getConfigByKeys(array $keys)
     {
-        $config = self::getConfig();
-        $keysString = join(' => ', $keys);
-
-        while ($key = array_shift($keys))
-        {
-            if (isset($config[$key]) === false)
-            {
-                throw new ErrorException('Config entry for [' . $keysString . '] is missing.');
-            }
-
-            $config = $config[$key];
-        }
-
-        if (!empty($config))
-        {
-            return $config;
-        }
-
-        return false;
+        return Config::getConfigByKeys($keys);
     }
 
     /**
@@ -79,9 +67,7 @@ class Service
      */
     private static function setConfig(array $configCommon, array $configEnv = [])
     {
-        self::$config = array_merge($configCommon, $configEnv);
-
-        return true;
+        return Config::setConfig($configCommon, $configEnv);
     }
 
     /**

@@ -1,0 +1,106 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "5a81263de82a58c2fef3a5b610aef188",
+    "packages": [
+        {
+            "name": "simplon/error",
+            "version": "0.1.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fightbulc/simplon_error.git",
+                "reference": "d40bb671be9458580ee41c39fd903d0030434844"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fightbulc/simplon_error/zipball/d40bb671be9458580ee41c39fd903d0030434844",
+                "reference": "d40bb671be9458580ee41c39fd903d0030434844",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Simplon\\Error\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tino Ehrich",
+                    "email": "tino@bigpun.me",
+                    "role": "developer"
+                }
+            ],
+            "description": "Graceful error handling",
+            "homepage": "https://github.com/fightbulc/simplon_error",
+            "keywords": [
+                "error",
+                "graceful",
+                "handling",
+                "response"
+            ],
+            "time": "2014-11-15 07:15:52"
+        },
+        {
+            "name": "simplon/helper",
+            "version": "0.7.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fightbulc/simplon_helper.git",
+                "reference": "b42c31ae75d62caa8fed43a5874c98ccb3827292"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fightbulc/simplon_helper/zipball/b42c31ae75d62caa8fed43a5874c98ccb3827292",
+                "reference": "b42c31ae75d62caa8fed43a5874c98ccb3827292",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Simplon\\Helper\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tino Ehrich",
+                    "email": "tino@bigpun.me",
+                    "role": "developer"
+                }
+            ],
+            "description": "Helpers for recurring tasks.",
+            "homepage": "https://github.com/fightbulc/simplon_helper",
+            "keywords": [
+                "helper",
+                "strings",
+                "value objects"
+            ],
+            "time": "2014-11-15 13:45:33"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "platform": {
+        "php": ">=5.4"
+    },
+    "platform-dev": []
+}
