@@ -116,6 +116,9 @@ class JsonRpcServer
         // in case we respond with text (e.g. cached content)
         if (is_string($response) === true)
         {
+            // wrap strings except json objects
+            $response = strpos($response, 'json:') === false ? '"' . $response . '"' : substr($response, 5);
+
             return '{"jsonrpc":"' . self::$jsonRpcVersion . '", "id":"' . self::$id . '", "result":' . $response . '}';
         }
 
