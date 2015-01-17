@@ -2,7 +2,7 @@
 
 namespace Simplon\Service;
 
-use Simplon\Error\ErrorResponse;
+use Simplon\Error\ErrorContext;
 
 /**
  * JsonRpcServer
@@ -97,13 +97,13 @@ class JsonRpcServer
         // --------------------------------------
 
         // failed request
-        $errorResponse = (new ErrorResponse())->requestNotFound(
+        $errorContext = (new ErrorContext())->requestNotFound(
             'Method not found',
             'JSONRPC_E0001',
             ['requestData' => self::$request]
         );
 
-        return self::respond($errorResponse);
+        return self::respond($errorContext);
     }
 
     /**
@@ -129,7 +129,7 @@ class JsonRpcServer
             'id'      => self::$id
         ];
 
-        if ($response instanceof ErrorResponse)
+        if ($response instanceof ErrorContext)
         {
             if (self::$errorHeaderCallback instanceof \Closure)
             {
@@ -166,7 +166,7 @@ class JsonRpcServer
     }
 
     /**
-     * @return bool|ErrorResponse
+     * @return bool|ErrorContext
      */
     private static function validateAndSetup()
     {
@@ -211,12 +211,12 @@ class JsonRpcServer
         // --------------------------------------
 
         // failed request
-        $errorResponse = (new ErrorResponse())->requestNotFound(
+        $errorContext = (new ErrorContext())->requestNotFound(
             'Malformed request data',
             'JSONRPC_E0002',
             ['requestData' => self::$request]
         );
 
-        return $errorResponse;
+        return $errorContext;
     }
 }

@@ -4,20 +4,20 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "5a81263de82a58c2fef3a5b610aef188",
+    "hash": "9fcb62ef599df4fdc5dec06264f66aee",
     "packages": [
         {
             "name": "simplon/error",
-            "version": "0.1.3",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/fightbulc/simplon_error.git",
-                "reference": "d40bb671be9458580ee41c39fd903d0030434844"
+                "reference": "de6bcc4a62fe0908beea3696562937c28bef5eac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/fightbulc/simplon_error/zipball/d40bb671be9458580ee41c39fd903d0030434844",
-                "reference": "d40bb671be9458580ee41c39fd903d0030434844",
+                "url": "https://api.github.com/repos/fightbulc/simplon_error/zipball/de6bcc4a62fe0908beea3696562937c28bef5eac",
+                "reference": "de6bcc4a62fe0908beea3696562937c28bef5eac",
                 "shasum": ""
             },
             "require": {
@@ -48,7 +48,7 @@
                 "handling",
                 "response"
             ],
-            "time": "2014-11-15 07:15:52"
+            "time": "2015-01-17 16:55:40"
         },
         {
             "name": "simplon/helper",
@@ -99,6 +99,7 @@
     "minimum-stability": "stable",
     "stability-flags": [],
     "prefer-stable": false,
+    "prefer-lowest": false,
     "platform": {
         "php": ">=5.4"
     },

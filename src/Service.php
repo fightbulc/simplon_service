@@ -3,7 +3,7 @@
 namespace Simplon\Service;
 
 use Simplon\Error\ErrorHandler;
-use Simplon\Error\ErrorResponse;
+use Simplon\Error\ErrorContext;
 use Simplon\Helper\Config;
 
 class Service
@@ -76,7 +76,7 @@ class Service
     private static function handleScriptErrors()
     {
         ErrorHandler::handleScriptErrors(
-            function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
+            function (ErrorContext $errorContext) { return JsonRpcServer::respond($errorContext); }
         );
     }
 
@@ -86,7 +86,7 @@ class Service
     private static function handleFatalErrors()
     {
         ErrorHandler::handleFatalErrors(
-            function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
+            function (ErrorContext $errorContext) { return JsonRpcServer::respond($errorContext); }
         );
     }
 
@@ -96,7 +96,7 @@ class Service
     private static function handleExceptions()
     {
         ErrorHandler::handleExceptions(
-            function (ErrorResponse $errorResponse) { return JsonRpcServer::respond($errorResponse); }
+            function (ErrorContext $errorContext) { return JsonRpcServer::respond($errorContext); }
         );
     }
 } 
